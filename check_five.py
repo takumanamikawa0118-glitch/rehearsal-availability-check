@@ -1,10 +1,13 @@
-"""Manual, read-only five-facility research check. No production writes."""
+"""Hourly, read-only five-facility research check. No production writes."""
 import collections
 import hashlib
 import json
 import os
 import re
+import socket
+import ssl
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -24,8 +27,9 @@ URLS = dict(
 )
 BASE = json.loads((ROOT / 'baseline.json').read_text())
 FETCHES = []
+ATTEMPTS = []
 
-def fetch(url, filename, origin):
+def fetch_once(url, filename, origin):
     if urllib.parse.urlsplit(url).hostname != urllib.parse.urlsplit(origin).hostname:
         raise ValueError('参照先のホストが変わりました。手動確認が必要です')
     started = time.monotonic()
@@ -41,6 +45,28 @@ def fetch(url, filename, origin):
         FETCHES.append(dict(file=filename, http=response.status, bytes=len(body), sha256=digest,
                             seconds=round(time.monotonic()-started, 3)))
         return body, digest
+
+def fetch(url, filename, origin):
+    """Retry a transient failure only once; never retry a denial or rate limit."""
+    for attempt in [1, 2]:
+        started = time.monotonic()
+        try:
+            result = fetch_once(url, filename, origin)
+            ATTEMPTS.append(dict(file=filename, attempt=attempt, result='ok',
+                                 seconds=round(time.monotonic()-started,3)))
+            return result
+        except Exception as exc:
+            transient = isinstance(exc, (TimeoutError, socket.timeout, ConnectionError))
+            if isinstance(exc, urllib.error.HTTPError):
+                transient = exc.code in [500, 502, 503, 504]
+            elif isinstance(exc, urllib.error.URLError):
+                transient = not isinstance(exc.reason, ssl.SSLError)
+            ATTEMPTS.append(dict(file=filename, attempt=attempt, result='error',
+                                 error=f'{type(exc).__name__}: {exc}',
+                                 seconds=round(time.monotonic()-started,3)))
+            if attempt == 2 or not transient:
+                raise
+            time.sleep(5)
 
 def check_pdf(facility):
     origin = URLS[facility]
@@ -107,6 +133,8 @@ def main():
             path.unlink()
     parser.ROWS.clear()
     parser.METRICS.clear()
+    FETCHES.clear()
+    ATTEMPTS.clear()
     results = []
     for facility in URLS:
         start = time.monotonic()
@@ -137,16 +165,20 @@ def main():
             row.update(result='取得・解析できず（空室とは判定しません）', cells=0,
                        error=f'{type(exc).__name__}: {exc}')
         row['seconds'] = round(time.monotonic()-start, 3)
+        row['retries'] = sum(1 for a in ATTEMPTS if a['attempt'] == 2 and
+                             a['file'].startswith(facility))
         results.append(row)
         print(NAMES[facility], row['result'], row['cells'], row['seconds'])
     report = dict(research_only=True, checked_at_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                  results=results, fetches=FETCHES, metrics=parser.METRICS)
+                  run_id=os.getenv('GITHUB_RUN_ID'), event=os.getenv('GITHUB_EVENT_NAME','local'),
+                  results=results, fetches=FETCHES, attempts=ATTEMPTS, metrics=parser.METRICS)
     (ROOT/'five-results.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     lines = ['# 5施設 取得・解析確認', '', '研究用の検証です。予約可能性や全件の読み取り精度を保証するものではありません。', '',
-             '|施設|結果|解析枠数|秒|', '|---|---|---:|---:|']
+             f"検証時刻（UTC）: {report['checked_at_utc']}", '',
+             '|施設|結果|解析枠数|再試行回数|秒|', '|---|---|---:|---:|---:|']
     for r in results:
-        lines.append(f"|{r['name']}|{r['result']}|{r['cells']}|{r['seconds']}|")
-    lines += ['', '帷子の空白は「空室候補」です。公開アプリへの反映・定期実行・データ保存サービスへの送信は行いません。', '',
+        lines.append(f"|{r['name']}|{r['result']}|{r['cells']}|{r['retries']}|{r['seconds']}|")
+    lines += ['', '帷子の空白は「空室候補」です。画像更新時は再確認が必要です。公開アプリやデータ保存サービスへの送信は行いません。', '',
               '取得失敗時は当該施設の解析結果を破棄します。団体名や予約表原文はログに出しません。', '',
               '<details><summary>詳細（展開してください）</summary>', '', '```json',
               json.dumps(report,ensure_ascii=False,indent=2), '```', '</details>']
@@ -155,6 +187,8 @@ def main():
     if os.getenv('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
             stream.write(summary)
+    # Keep the full summary, then make failed facilities visible in Actions.
+    return 1 if any('error' in row for row in results) else 0
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
