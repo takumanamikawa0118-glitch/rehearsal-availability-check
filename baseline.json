@@ -1,0 +1,851 @@
+{
+  "hashes": {
+    "hiranuma": "1754d4e56d77475da9b37494508745c72cab1b40d1ba2d336de51786a01f72ad",
+    "tobe": "6a6d7c59364a235a2a626167fb90b180f3bb50c3f65baf967bd43191576ef6c8",
+    "karuizawa": "c5bc9c44da7baec302e950516f17539555828247cc38fada1759bca51bf32bdc",
+    "katabira-0": "ff430e4445c3a13fdf9ca34a8697759f33805f48125878b4d012cd3eee181202",
+    "katabira-1": "7b1066dcc5d1ab45e661570f292562f7e401e9ffbe069ac4fe1518f9255f6202"
+  },
+  "samples": [
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室A",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室A",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室A",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室B",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室B",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室B",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室C",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室C",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "会議室C",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-26",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "全館斜線の休館日",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-20",
+      "room": "会議室A",
+      "period": "午前",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "A室のみ空白",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-20",
+      "room": "会議室B",
+      "period": "午前",
+      "expected": "occupied",
+      "actual": "occupied",
+      "case": "B室は予約番号あり",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-25",
+      "room": "会議室A",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "日曜夜の斜線",
+      "passed": true
+    },
+    {
+      "facility": "hiranuma",
+      "date": "2026-10-02",
+      "room": "会議室C",
+      "period": "午後",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "空白マス",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "レクリエーション",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "レクリエーション",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "レクリエーション",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室1",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室1",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室1",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室2",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室2",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-19",
+      "room": "集会室2",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "空白だが灰色の休館日",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-22",
+      "room": "レクリエーション",
+      "period": "午前",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "空白",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-22",
+      "room": "レクリエーション",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "優先団体の優",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-16",
+      "room": "和室",
+      "period": "午後",
+      "expected": "occupied",
+      "actual": "occupied",
+      "case": "×",
+      "passed": true
+    },
+    {
+      "facility": "tobe",
+      "date": "2026-10-18",
+      "room": "集会室1",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "日曜夜間の横棒",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "ホール",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "ホール",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "ホール",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-17",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "ホール",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "ホール",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "ホール",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-18",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "結合セルで臨時休館",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-19",
+      "room": "ホール",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "月曜の黄色い閉館日",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-16",
+      "room": "和室",
+      "period": "午前",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "空白",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-16",
+      "room": "ホール",
+      "period": "午前",
+      "expected": "occupied",
+      "actual": "occupied",
+      "case": "×",
+      "passed": true
+    },
+    {
+      "facility": "karuizawa",
+      "date": "2026-10-28",
+      "room": "ホール",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "施設行事文字",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室I",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室II",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-13",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室I",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室II",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-16",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "火金の色付き休館日",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-10",
+      "room": "研修室I",
+      "period": "夜間",
+      "expected": "occupied_or_unknown",
+      "actual": "occupied_or_unknown",
+      "case": "画像の×",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-10",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "actual": "available_candidate",
+      "case": "画像の空白",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-31",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "黄色の自主事業・結合セル",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-15",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "黄色の自主事業・複数枠",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-15",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "occupied_or_unknown",
+      "actual": "occupied_or_unknown",
+      "case": "画像の×",
+      "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-15",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "actual": "available_candidate",
+      "case": "画像の空白・隣室の×と区別",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-17",
+      "room": "A室",
+      "period": "午前",
+      "expected": "occupied",
+      "actual": "occupied",
+      "case": "○",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-18",
+      "room": "A室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "actual": "unavailable",
+      "case": "×",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-17",
+      "room": "A室",
+      "period": "夜間",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "空白は空室と利用者確認済み",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-06",
+      "room": "A室",
+      "period": "午前",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "利用者指定例：空白",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-06",
+      "room": "A室",
+      "period": "午後",
+      "expected": "available_in_source",
+      "actual": "available_in_source",
+      "case": "利用者指定例：空白",
+      "passed": true
+    },
+    {
+      "facility": "kikuna",
+      "date": "2026-10-06",
+      "room": "A室",
+      "period": "夜間",
+      "expected": "occupied",
+      "actual": "occupied",
+      "case": "利用者指定例：団体名のみの予約",
+      "passed": true
+    }
+  ]
+}
