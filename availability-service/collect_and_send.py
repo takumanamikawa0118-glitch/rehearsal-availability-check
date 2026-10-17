@@ -1,5 +1,4 @@
 """Collect five public sources and send sanitized results to the dedicated Worker."""
-import datetime
 import json
 import os
 import sys
@@ -34,7 +33,22 @@ def send(payload, token, opener=None):
         result = json.loads(response.read(4097))
         if result.get('accepted') is not True or type(result.get('updated')) is not bool:
             raise RuntimeError('Unexpected response')
-        return result['updated']
+        updated = result['updated']
+    # Verify the actual public read API after a successful write.
+    read_url = ENDPOINT.removesuffix('/ingest') + '/availability?facility=' + payload['facility']
+    read_request = urllib.request.Request(read_url, headers={'User-Agent': 'RehearsalAvailabilityUploader/0.1'})
+    with opener.open(read_request, timeout=25) as response:
+        data = response.read(MAX_BYTES + 4097)
+        if response.status != 200 or len(data) > MAX_BYTES + 4096:
+            raise RuntimeError('Readback failed')
+        saved = json.loads(data)
+        expected_state = 'source_checked' if payload['result'] == 'ok' else 'unverified'
+        if (saved.get('facility') != payload['facility'] or
+                saved.get('checked_at') != payload['checked_at'] or
+                saved.get('state') != expected_state or
+                saved.get('cells') != payload['cells']):
+            raise RuntimeError('Readback mismatch')
+    return updated
 
 def main():
     token = os.environ.get('INGEST_TOKEN', '')
@@ -49,7 +63,7 @@ def main():
     if set(results) != FACILITIES:
         print('施設一覧が不一致のため送信を中止しました。')
         return 1
-    summaries = ['\n## 空き情報サービスへの保存結果\n', '|施設|取得|保存|', '|---|---|---|']
+    summaries = ['', '## 空き情報サービスへの保存結果', '', '|施設|取得|保存|', '|---|---|---|']
     failed = False
     for facility, row in results.items():
         good = 'error' not in row
@@ -64,7 +78,7 @@ def main():
             try:
                 updated = send(payload, token)
                 saved = True
-                status = '保存済み' if updated else '同一・古い報告のため更新なし'
+                status = '保存・読み戻し一致' if updated else '更新なし・読み戻し一致'
                 break
             except urllib.error.HTTPError as exc:
                 retry = exc.code in (500, 502, 503, 504)
