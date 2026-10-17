@@ -1,7 +1,7 @@
 # 空き情報 保存・配信サービス（未公開の試作）
 
 このブランチは後続工程の準備です。実行中の5施設の毎時検証には変更を加えません。
-Cloudflareへのデプロイ、D1の作成、認証情報の登録、稽古ノートへの組み込みはまだ行っていません。
+D1とWorkerの初期設定は利用者が実施済みです。送受信の実環境検証と稽古ノートへの組み込みは未完了です。
 
 ## 用途
 
@@ -14,6 +14,8 @@ GitHubの取得処理から施設ごとのデータを受け取り、Cloudflare 
 - worker.mjs：Cloudflare Worker用のHTTP処理とD1の作成用SQL（SCHEMA定数）。
 - worker.test.mjs：Node標準テストと実際のインメモリSQLiteによる検証。
 - payload_export.py：既存解析結果から送信項目だけを取り出すアダプター。自己テスト付き。通信処理は含みません。
+- collect_and_send.py：取得処理を呼び出し、原文を除いた結果を専用Workerに送信。
+- sender_test.py：固定送信先・転送拒否・トークンと容量制限の検証。
 
 ## テスト（外部サイトへのアクセスなし）
 
@@ -58,7 +60,7 @@ Freeの利用枠を超えて停止した場合、アプリ側で「取得でき�
 ## 次の未完了事項
 
 毎時検証の安定性確認、帷子の更新画像への対応、施設ごとの利用時間・予約受付条件の確認、
-送信処理・GitHubシークレット・Cloudflare設定、実環境の無料枠/CPU時間測定、
+送受信の実環境検証、実環境の無料枠/CPU時間測定、
 空き情報一覧画面、イベント全時間を同一室で満たす候補検索。
 
 ## 公式資料
@@ -66,3 +68,9 @@ Freeの利用枠を超えて停止した場合、アプリ側で「取得でき�
 - https://developers.cloudflare.com/d1/worker-api/prepared-statements/
 - https://developers.cloudflare.com/d1/platform/limits/
 - https://developers.cloudflare.com/d1/platform/pricing/
+
+## 送信の実環境確認
+
+availability-upload-check.ymlは試作ブランチの送信コード変更時、または手動実行時に5施設の取得と保存を行います。毎時処理とは同時実行しません。送信先は専用WorkerのHTTPS URLに固定し、転送を拒否します。INGEST_TOKENはActionsの実行ステップにだけ渡します。認証失敗は再試行しません。一時的な通信失敗のみ1回再試行します。
+
+元の取得処理が出す概要は取得部分のみの説明です。その下の「空き情報サービスへの保存結果」で送信結果を確認してください。
