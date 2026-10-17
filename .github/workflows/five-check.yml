@@ -10,38 +10,20 @@ concurrency:
   cancel-in-progress: false
 jobs:
   check:
-    if: github.event.repository.private == false
+    # Standard public-repository runner only. Set AVAILABILITY_PAUSED=true to pause.
+    if: github.event.repository.private == false && vars.AVAILABILITY_PAUSED != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
-      - name: Limit scheduled trial (until 2026-10-20 00:00 JST)
-        id: window
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          python3 - <<'PY'
-          import datetime, os
-          end = datetime.datetime(2026, 10, 19, 15, tzinfo=datetime.timezone.utc)
-          active = os.environ['EVENT_NAME'] != 'schedule' or datetime.datetime.now(datetime.timezone.utc) < end
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write('active=' + str(active).lower() + '\n')
-          if not active:
-              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
-                  f.write('自動検証期間が終了しました。施設へのアクセスは行いません。ActionsからDisable workflowで停止してください。手動実行は引き続き可能です。\n')
-          PY
       - uses: actions/checkout@v5
-        if: steps.window.outputs.active == 'true'
         with:
           persist-credentials: false
       - uses: actions/setup-python@v6
-        if: steps.window.outputs.active == 'true'
         with:
           python-version: '3.12'
       - name: Install free open-source parsers (no cache)
-        if: steps.window.outputs.active == 'true'
         run: python -m pip install --no-cache-dir -r requirements.txt
       - name: Check and save five public facilities
-        if: steps.window.outputs.active == 'true'
         env:
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
         run: python availability-service/collect_and_send.py
