@@ -93,12 +93,19 @@ def check_katabira():
                  and urllib.parse.urlsplit(el.get('src', el.get('href', ''))).path.endswith('.jpg')))
     if len(links) != 2:
         raise ValueError('画像数が変わりました。対象月と配置の再確認が必要です')
-    # The image parser is only validated against these exact two originals.
+    # The image parser is only validated against these exact two reviewed images.
+    before = len(parser.ROWS)
     for i, link in enumerate(links):
         _, digest = fetch(link, f'katabira-{i}.jpg', origin)
         if digest != BASE['hashes'].get(f'katabira-{i}'):
             raise ValueError('画像が更新されました。年月・配置・読み取り精度を再確認します')
         parser.parse_image(i)
+    samples = [s for s in BASE['samples'] if s['facility'] == 'katabira']
+    for sample in samples:
+        hits = [r for r in parser.ROWS[before:] if all(r[k] == sample[k] for k in ['date','room','period'])]
+        if len(hits) != 1 or hits[0]['status'] != sample['expected']:
+            raise ValueError('画像の目視確認サンプルと不一致です')
+    parser.METRICS.append(dict(facility='katabira', reviewed_samples_passed=len(samples)))
     return None
 
 def check_kikuna():
@@ -178,7 +185,7 @@ def main():
              '|施設|結果|解析枠数|再試行回数|秒|', '|---|---|---:|---:|---:|']
     for r in results:
         lines.append(f"|{r['name']}|{r['result']}|{r['cells']}|{r['retries']}|{r['seconds']}|")
-    lines += ['', '帷子の空白は「空室候補」です。画像更新時は再確認が必要です。公開アプリやデータ保存サービスへの送信は行いません。', '',
+    lines += ['', '帷子の空白は「空室候補」です。画像更新時は再確認が必要です。この概要は取得・解析部分の結果です。送信を伴う実行では、下の保存結果も確認してください。', '',
               '取得失敗時は当該施設の解析結果を破棄します。団体名や予約表原文はログに出しません。', '',
               '<details><summary>詳細（展開してください）</summary>', '', '```json',
               json.dumps(report,ensure_ascii=False,indent=2), '```', '</details>']

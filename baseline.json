@@ -3,8 +3,8 @@
     "hiranuma": "1754d4e56d77475da9b37494508745c72cab1b40d1ba2d336de51786a01f72ad",
     "tobe": "6a6d7c59364a235a2a626167fb90b180f3bb50c3f65baf967bd43191576ef6c8",
     "karuizawa": "c5bc9c44da7baec302e950516f17539555828247cc38fada1759bca51bf32bdc",
-    "katabira-0": "ff430e4445c3a13fdf9ca34a8697759f33805f48125878b4d012cd3eee181202",
-    "katabira-1": "7b1066dcc5d1ab45e661570f292562f7e401e9ffbe069ac4fe1518f9255f6202"
+    "katabira-0": "46fa58e64b8da5aab9a80eecc3796108ebbeabf064a39fd24eb3df4e89c93269",
+    "katabira-1": "37353677bb8bcdf0c28b3a2cc5273a45b9db6aea8385fa94d76996c0a8e469d0"
   },
   "samples": [
     {
@@ -846,6 +846,209 @@
       "actual": "occupied",
       "case": "利用者指定例：団体名のみの予約",
       "passed": true
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-21",
+      "room": "研修室II",
+      "period": "夜間",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-21",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-24",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-24",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-29",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-29",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-29",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-05",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-05",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-05",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-12",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-12",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-12",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-25",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-25",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-29",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-29",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-29",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "occupied_or_unknown",
+      "case": "2026-10-17更新画像の追加予約マーク"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-21",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-24",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-10-29",
+      "room": "和室",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-05",
+      "room": "和室",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-25",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-11-29",
+      "room": "和室",
+      "period": "午前",
+      "expected": "available_candidate",
+      "case": "追加予約に隣接した空欄"
     }
-  ]
+  ],
+  "katabira_review": {
+    "reviewed_at": "2026-10-17",
+    "year": 2026,
+    "months": [
+      10,
+      11
+    ],
+    "changed_cells_checked": 18,
+    "adjacent_blank_cells_checked": 6,
+    "note": "Updated images retain geometry and year/month. Hash-pinned; future unreviewed images remain unverified."
+  }
 }
