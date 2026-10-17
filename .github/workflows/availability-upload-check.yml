@@ -1,0 +1,29 @@
+name: Availability upload integration check
+on:
+  push:
+    branches: [availability-service-draft]
+    paths: ['availability-service/collect_and_send.py', '.github/workflows/availability-upload-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: five-facility-check
+  cancel-in-progress: false
+jobs:
+  collect-and-send:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install parsers
+        run: python -m pip install --no-cache-dir -r requirements.txt
+      - name: Collect and save five facility snapshots
+        env:
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+        run: python availability-service/collect_and_send.py

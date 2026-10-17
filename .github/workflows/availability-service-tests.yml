@@ -19,4 +19,6 @@ jobs:
       - name: Worker and SQLite tests
         run: node --test availability-service/worker.test.mjs
       - name: Export adapter tests
-        run: python3 availability-service/payload_export.py
+        run: |
+          python3 availability-service/payload_export.py
+          python3 availability-service/sender_test.py
