@@ -1,0 +1,24 @@
+name: Availability service tests
+on:
+  push:
+    branches: [availability-service-draft]
+    paths: ['availability-service/**', '.github/workflows/availability-service-tests.yml']
+  pull_request:
+    paths: ['availability-service/**', '.github/workflows/availability-service-tests.yml']
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Worker and SQLite tests
+        run: node --test availability-service/worker.test.mjs
+      - name: Export adapter tests
+        run: |
+          python3 availability-service/payload_export.py
+          python3 availability-service/sender_test.py

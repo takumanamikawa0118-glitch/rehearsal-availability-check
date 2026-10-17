@@ -40,6 +40,8 @@ jobs:
       - name: Install free open-source parsers (no cache)
         if: steps.window.outputs.active == 'true'
         run: python -m pip install --no-cache-dir -r requirements.txt
-      - name: Check five public facilities
+      - name: Check and save five public facilities
         if: steps.window.outputs.active == 'true'
-        run: python check_five.py
+        env:
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+        run: python availability-service/collect_and_send.py
