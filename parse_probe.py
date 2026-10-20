@@ -90,7 +90,7 @@ def parse_kikuna(filename):
    put('kikuna',room,date,label.split()[0],status,why,1)
  assert len(ROWS)-before in [90,93]
  METRICS.append({'facility':'kikuna','source':filename,'cells':len(ROWS)-before,'note':'空白は空室、団体名の記載は予約済み。利用者確認と10月6日A室の直接照合による。'})
-def parse_image(i):
+def parse_image(i, year=2026, month=None):
  t=time.perf_counter();im=cv2.imread(str(R/'raw'/f'katabira-{i}.jpg'));h,w=im.shape[:2];gray=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY);binary=(gray<100).astype('uint8')
  horiz=cv2.morphologyEx(binary,cv2.MORPH_OPEN,np.ones((1,200),np.uint8));vert=cv2.morphologyEx(binary,cv2.MORPH_OPEN,np.ones((300,1),np.uint8))
  def groups(a):
@@ -98,14 +98,15 @@ def parse_image(i):
  xs=groups(vert.sum(axis=0)>600);ys=groups(horiz.sum(axis=1)>400);assert len(xs)==8 and len(ys)>=90
  # Current source has 31 template days even in November. Refuse a different geometry.
  top=ys[1];bottom=ys[-1];step=(bottom-top)/93;assert 15<step<19
- m=10+i;y=2026;count=calendar.monthrange(y,m)[1];assert (R/'raw'/'katabira.html').read_bytes().find(f'{m}月予約状況'.encode('cp932'))>=0
+ m=month if month is not None else 10+i;y=year;count=calendar.monthrange(y,m)[1];assert (R/'raw'/'katabira.html').read_bytes().find(f'{m}月予約状況'.encode('cp932'))>=0
  debug=[]
  for day in range(1,count+1):
   for slot in range(3):
    ri=(day-1)*3+slot;y0=int(round(top+ri*step));y1=int(round(top+(ri+1)*step))
    for room in range(4):
-    x0=int(xs[3+room]);x1=int(xs[4+room]);crop=im[y0+4:y1-3,x0+5:x1-5];g=cv2.cvtColor(crop,cv2.COLOR_BGR2GRAY);ink=(g<110);frac=float(ink.mean());yellow=float(((crop[:,:,2]>180)&(crop[:,:,1]>180)&(crop[:,:,0]<120)).mean())
+    x0=int(xs[3+room]);x1=int(xs[4+room]);crop=im[y0+4:y1-3,x0+5:x1-5];g=cv2.cvtColor(crop,cv2.COLOR_BGR2GRAY);ink=(g<110);frac=float(ink.mean());yellow=float(((crop[:,:,2]>180)&(crop[:,:,1]>180)&(crop[:,:,0]<120)).mean());rgb=crop.astype('int16');green=float(((rgb[:,:,1]>170)&(rgb[:,:,2]>150)&(rgb[:,:,0]>140)&(rgb[:,:,1]-rgb[:,:,2]>4)&(rgb[:,:,1]-rgb[:,:,0]>10)).mean())
     if datetime.date(y,m,day).weekday() in [1,4]:status,why='unavailable','tuesday_friday_closure'
+    elif green>.4:status,why='unavailable','green_closure_shading'
     elif yellow>.4:status,why='unavailable','yellow_program_or_merged_area'
     elif frac<.002:status,why='available_candidate','blank_image_cell_needs_validation'
     else:status,why='occupied_or_unknown','ink_present_not_assumed_blank'

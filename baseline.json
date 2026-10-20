@@ -1038,17 +1038,292 @@
       "period": "午前",
       "expected": "available_candidate",
       "case": "追加予約に隣接した空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-01",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "火曜休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-01",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "火曜休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-01",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "火曜休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-01",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "火曜休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-02",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "available_candidate",
+      "case": "通常日の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-02",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "available_candidate",
+      "case": "通常日の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-02",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "available_candidate",
+      "case": "通常日の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-02",
+      "room": "和室",
+      "period": "午前",
+      "expected": "available_candidate",
+      "case": "通常日の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "黄色の学校行事"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "黄色の学校行事"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "黄色の学校行事"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "黄色の学校行事"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "行事の次の時間帯は空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "行事の次の時間帯は空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "行事の次の時間帯は空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-19",
+      "room": "和室",
+      "period": "午後",
+      "expected": "available_candidate",
+      "case": "行事の次の時間帯は空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-28",
+      "room": "研修室I",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "case": "年末休館直前の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-28",
+      "room": "研修室II",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "case": "年末休館直前の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-28",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "case": "年末休館直前の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-28",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "available_candidate",
+      "case": "年末休館直前の空欄"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-29",
+      "room": "研修室I",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "年末休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-29",
+      "room": "研修室II",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "年末休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-29",
+      "room": "研修室III",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "年末休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-29",
+      "room": "和室",
+      "period": "午前",
+      "expected": "unavailable",
+      "case": "年末休館"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-30",
+      "room": "研修室I",
+      "period": "午後",
+      "expected": "unavailable",
+      "case": "水曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-30",
+      "room": "研修室II",
+      "period": "午後",
+      "expected": "unavailable",
+      "case": "水曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-30",
+      "room": "研修室III",
+      "period": "午後",
+      "expected": "unavailable",
+      "case": "水曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-30",
+      "room": "和室",
+      "period": "午後",
+      "expected": "unavailable",
+      "case": "水曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-31",
+      "room": "研修室I",
+      "period": "夜間",
+      "expected": "unavailable",
+      "case": "木曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-31",
+      "room": "研修室II",
+      "period": "夜間",
+      "expected": "unavailable",
+      "case": "木曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-31",
+      "room": "研修室III",
+      "period": "夜間",
+      "expected": "unavailable",
+      "case": "木曜だが年末休館の緑背景"
+    },
+    {
+      "facility": "katabira",
+      "date": "2026-12-31",
+      "room": "和室",
+      "period": "夜間",
+      "expected": "unavailable",
+      "case": "木曜だが年末休館の緑背景"
     }
   ],
   "katabira_review": {
-    "reviewed_at": "2026-10-17",
+    "reviewed_at": "2026-10-20",
     "year": 2026,
     "months": [
       10,
-      11
+      11,
+      12
     ],
     "changed_cells_checked": 18,
     "adjacent_blank_cells_checked": 6,
-    "note": "Updated images retain geometry and year/month. Hash-pinned; future unreviewed images remain unverified."
-  }
+    "note": "Reviewed December header R8.12, unchanged table geometry, green year-end closures and yellow school event. Images remain hash-pinned; unreviewed images fail closed. Image count and order no longer determine month.",
+    "december_samples_checked": 32
+  },
+  "katabira_images": [
+    {
+      "sha256": "46fa58e64b8da5aab9a80eecc3796108ebbeabf064a39fd24eb3df4e89c93269",
+      "year": 2026,
+      "month": 10
+    },
+    {
+      "sha256": "37353677bb8bcdf0c28b3a2cc5273a45b9db6aea8385fa94d76996c0a8e469d0",
+      "year": 2026,
+      "month": 11
+    },
+    {
+      "sha256": "033485dcbf855560361fb2db2a4a56643abe4b244836fb7d8657483a622ca8d7",
+      "year": 2026,
+      "month": 12
+    }
+  ]
 }

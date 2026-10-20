@@ -1,5 +1,6 @@
 """Hourly, read-only five-facility research check. No production writes."""
 import collections
+import errno
 import hashlib
 import json
 import os
@@ -29,44 +30,73 @@ BASE = json.loads((ROOT / 'baseline.json').read_text())
 FETCHES = []
 ATTEMPTS = []
 
+def request_policy(url):
+    # The two intermittently slow sources get a longer, bounded budget.
+    slow_source = urllib.parse.urlsplit(url).hostname in {urllib.parse.urlsplit(URLS[x]).hostname for x in ['katabira', 'kikuna']}
+    return (40, (0, 10, 20)) if slow_source else (25, (0, 5))
+
+def failure_kind(exc):
+    reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    if isinstance(exc, urllib.error.HTTPError):
+        return 'http_' + str(exc.code)
+    if isinstance(reason, ssl.SSLError):
+        return 'tls'
+    if isinstance(reason, socket.gaierror):
+        return 'dns'
+    if isinstance(reason, (TimeoutError, socket.timeout)):
+        return 'timeout'
+    if isinstance(reason, ConnectionError):
+        return 'connection'
+    if isinstance(reason, OSError) and reason.errno in (errno.ENETUNREACH, errno.EHOSTUNREACH):
+        return 'network_unreachable'
+    return type(reason).__name__
+
+
 def fetch_once(url, filename, origin):
     if urllib.parse.urlsplit(url).hostname != urllib.parse.urlsplit(origin).hostname:
         raise ValueError('参照先のホストが変わりました。手動確認が必要です')
     started = time.monotonic()
     req = urllib.request.Request(url, headers={'User-Agent': 'RehearsalAvailabilityProbe/0.3 (read-only research)'})
-    with urllib.request.urlopen(req, timeout=25) as response:
-        if urllib.parse.urlsplit(response.url).hostname != urllib.parse.urlsplit(origin).hostname:
-            raise ValueError('転送先の確認が必要です')
-        body = response.read(8_000_001)
-        if len(body) > 8_000_000:
-            raise ValueError('取得容量の上限を超えました')
-        digest = hashlib.sha256(body).hexdigest()
-        (RAW / filename).write_bytes(body)
-        FETCHES.append(dict(file=filename, http=response.status, bytes=len(body), sha256=digest,
-                            seconds=round(time.monotonic()-started, 3)))
-        return body, digest
+    timeout, _ = request_policy(url)
+    phase = 'connect_tls_or_headers'
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            if urllib.parse.urlsplit(response.url).hostname != urllib.parse.urlsplit(origin).hostname:
+                raise ValueError('転送先の確認が必要です')
+            phase = 'body_read'
+            body = response.read(8_000_001)
+            if len(body) > 8_000_000:
+                raise ValueError('取得容量の上限を超えました')
+            digest = hashlib.sha256(body).hexdigest()
+            (RAW / filename).write_bytes(body)
+            FETCHES.append(dict(file=filename, http=response.status, bytes=len(body), sha256=digest,
+                                seconds=round(time.monotonic()-started, 3)))
+            return body, digest
+    except Exception as exc:
+        exc.fetch_phase = phase
+        raise
 
 def fetch(url, filename, origin):
-    """Retry a transient failure only once; never retry a denial or rate limit."""
-    for attempt in [1, 2]:
+    """Bounded retries for transient errors; never retry denials, rate limits or TLS errors."""
+    timeout, delays = request_policy(url)
+    for attempt, delay in enumerate(delays, 1):
+        if delay:
+            time.sleep(delay)
         started = time.monotonic()
         try:
             result = fetch_once(url, filename, origin)
             ATTEMPTS.append(dict(file=filename, attempt=attempt, result='ok',
-                                 seconds=round(time.monotonic()-started,3)))
+                                 timeout_seconds=timeout, seconds=round(time.monotonic()-started,3)))
             return result
         except Exception as exc:
-            transient = isinstance(exc, (TimeoutError, socket.timeout, ConnectionError))
-            if isinstance(exc, urllib.error.HTTPError):
-                transient = exc.code in [500, 502, 503, 504]
-            elif isinstance(exc, urllib.error.URLError):
-                transient = not isinstance(exc.reason, ssl.SSLError)
+            kind = failure_kind(exc)
+            transient = kind in ('timeout', 'dns', 'connection', 'network_unreachable', 'http_500', 'http_502', 'http_503', 'http_504')
             ATTEMPTS.append(dict(file=filename, attempt=attempt, result='error',
-                                 error=f'{type(exc).__name__}: {exc}',
+                                 error=f'{type(exc).__name__}: {exc}', kind=kind,
+                                 phase=getattr(exc, 'fetch_phase', 'validation'), timeout_seconds=timeout,
                                  seconds=round(time.monotonic()-started,3)))
-            if attempt == 2 or not transient:
+            if attempt == len(delays) or not transient:
                 raise
-            time.sleep(5)
 
 def check_pdf(facility):
     origin = URLS[facility]
@@ -87,20 +117,36 @@ def check_katabira():
     body, _ = fetch(origin, 'katabira.html', origin)
     text = body.decode('cp932', errors='strict')
     soup = BeautifulSoup(text, 'html.parser')
-    links = list(dict.fromkeys(urllib.parse.urljoin(origin, el.get('src', el.get('href', '')))
-                 for el in soup.select('[src], a[href]')
-                 if 'dataimge' in el.get('src', el.get('href', ''))
-                 and urllib.parse.urlsplit(el.get('src', el.get('href', ''))).path.endswith('.jpg')))
-    if len(links) != 2:
-        raise ValueError('画像数が変わりました。対象月と配置の再確認が必要です')
-    # The image parser is only validated against these exact two reviewed images.
+    images = []
+    seen = set()
+    reviewed = {x['sha256']: x for x in BASE['katabira_images']}
+    for image in soup.select('img[src]'):
+        src = image['src']
+        if 'dataimge' not in src or not urllib.parse.urlsplit(src).path.lower().endswith('.jpg'):
+            continue
+        link = urllib.parse.urljoin(origin, src)
+        if link in seen:
+            continue
+        seen.add(link)
+        label = re.fullmatch(r'(\d{1,2})月予約状況', image.get('alt', '').strip())
+        if not label or not 1 <= int(label[1]) <= 12:
+            raise ValueError('画像の対象月を確認できません')
+        images.append((link, int(label[1])))
+    if not 1 <= len(images) <= 12:
+        raise ValueError('予約画像数を確認できません')
     before = len(parser.ROWS)
-    for i, link in enumerate(links):
+    months = set()
+    for i, (link, month) in enumerate(images):
         _, digest = fetch(link, f'katabira-{i}.jpg', origin)
-        if digest != BASE['hashes'].get(f'katabira-{i}'):
+        review = reviewed.get(digest)
+        if not review or review['month'] != month:
             raise ValueError('画像が更新されました。年月・配置・読み取り精度を再確認します')
-        parser.parse_image(i)
-    samples = [s for s in BASE['samples'] if s['facility'] == 'katabira']
+        key = f"{review['year']}-{month:02}"
+        if key in months:
+            raise ValueError('画像の対象月が重複しています')
+        months.add(key)
+        parser.parse_image(i, year=review['year'], month=month)
+    samples = [s for s in BASE['samples'] if s['facility'] == 'katabira' and s['date'][:7] in months]
     for sample in samples:
         hits = [r for r in parser.ROWS[before:] if all(r[k] == sample[k] for k in ['date','room','period'])]
         if len(hits) != 1 or hits[0]['status'] != sample['expected']:
@@ -172,7 +218,7 @@ def main():
             row.update(result='取得・解析できず（空室とは判定しません）', cells=0,
                        error=f'{type(exc).__name__}: {exc}')
         row['seconds'] = round(time.monotonic()-start, 3)
-        row['retries'] = sum(1 for a in ATTEMPTS if a['attempt'] == 2 and
+        row['retries'] = sum(1 for a in ATTEMPTS if a['attempt'] > 1 and
                              a['file'].startswith(facility))
         results.append(row)
         print(NAMES[facility], row['result'], row['cells'], row['seconds'])

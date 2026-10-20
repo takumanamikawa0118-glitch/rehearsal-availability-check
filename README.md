@@ -29,3 +29,9 @@ Actions → Five facilities availability check → 最新の実行 → Summary�
 公式資料：
 - https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 - https://docs.github.com/en/billing/concepts/product-billing/github-actions
+
+## 2026-10-20 取得修正
+
+- 帷子：予約画像の2枚固定を廃止し、画像ごとの月表示と検証済みハッシュから年月を照合。10・11・12月の3枚に対応しました。12月の32サンプル（空欄、学校行事、定休日、年末休館）を確認済み。緑の休館表示も空室候補から除外します。未検証の画像への更新時は、従来通り空きと表示せず再検証を要求します。
+- 帷子・菊名の通信：一時的な通信失敗時に限り、各試行の待ち時間を40秒、最大3試行（待機10秒・20秒）に変更。拒否・アクセス過多・TLSエラーは再試行しません。ログにエラー分類と接続・応答待ち／本文取得の段階を追加しました。接続先を変えたり証明書検証を無効にしたりすることはありません。
+- オフライン回帰確認：`python3 connection_test.py`。既存の失敗時の未確認扱い、保存後の読み戻し照合は維持しています。
