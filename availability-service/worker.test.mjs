@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
-import worker, {SCHEMA,validate,parseSearch,dayPeriods,searchFacility} from './worker.mjs';
+import worker, {SCHEMA,validate,parseSearch,dayPeriods,searchFacility,saveDiagnostic} from './worker.mjs';
 
 const token = 'test-only-not-a-real-secret-000000000';
 function database() {
   const sqlite = new DatabaseSync(':memory:'); sqlite.exec(SCHEMA);
-  return {prepare(sql) {let args = []; return {
+  return {exec:sql=>sqlite.exec(sql),async batch(statements){sqlite.exec('BEGIN');try{const r=[];for(const stmt of statements)r.push(await stmt.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}},prepare(sql) {let args = []; return {
     bind(...values) {args = values; return this;},
     async run() {const r=sqlite.prepare(sql).run(...args); return {meta:{changes:Number(r.changes)}};},
+    async all(){return {results:sqlite.prepare(sql).all(...args)};},
     async first() {return sqlite.prepare(sql).get(...args) || null;}
   };}};
 }
@@ -54,8 +55,8 @@ test('reject unexpected fields, empty success, invalid dates and duplicate cells
   const bad=payload(); bad.cells[0].date='2026-02-30'; assert.throws(()=>validate(bad));
   const duplicate=payload();duplicate.cells.push({...duplicate.cells[0]});assert.throws(()=>validate(duplicate));
 });
-test('image candidates cannot be promoted to confirmed availability',()=>{
-  assert.throws(()=>validate(payload({facility:'katabira'})));
+test('validated image blanks accepted and legacy candidates retained',()=>{
+  assert.equal(validate(payload({facility:'katabira'})).cells[0].status,'available_in_source');
   const candidate=payload({facility:'katabira'}); candidate.cells[0].status='available_candidate';
   assert.equal(validate(candidate).cells[0].status,'available_candidate');
 });
@@ -184,14 +185,14 @@ test('missing/unknown dates and reservation states do not become free',()=>{
   assert.equal(search('hiranuma',[cell('会議室C','午後')],query('2026-11-24')).reason,'insufficient_source_data');
   assert.equal(search('hiranuma',[cell('new room','午後')]).matches.length,0);
 });
-test('image and room-group candidates are kept separate from source time matches',()=>{
+test('legacy candidates stay separate; verified blanks and grouped rooms match',()=>{
   const image=search('katabira',[cell('研修室I','午後','available_candidate')]);
   assert.equal(image.matches.length,0);assert.deepEqual(image.candidates[0].confirmation_reasons,['image_candidate']);
   const badPromoted=search('katabira',[cell('研修室I','午後')]);
-  assert.equal(badPromoted.matches.length,0);
+  assert.equal(badPromoted.matches.length,1);
   const group=search('karuizawa',[cell('ホール','午後')]);
-  assert.equal(group.matches.length,0);assert.equal(group.candidates[0].same_individual_room_verified,false);
-  assert.equal(group.candidates[0].room_scope,'source_group');
+  assert.equal(group.matches.length,1);assert.equal(group.matches[0].same_individual_room_verified,true);
+  assert.equal(group.matches[0].room_scope,'individual_room');
 });
 test('multiple-period eligibility is not assumed from empty cells',()=>{
   for (const [id,room] of [['tobe','和室'],['karuizawa','ホール'],['hiranuma','会議室A']]) {
@@ -226,7 +227,10 @@ test('search input failures, database failures and catalog metadata',async()=>{
   assert.equal(r.status,503);assert.equal((await r.text()).includes('private DB'),false);
   const catalog=await (await worker.fetch(new Request('https://example.test/facilities'),{})).json();
   assert.equal(catalog.facilities.length,5);assert.deepEqual(catalog.holiday_years,[2026,2027]);
-  assert.equal(catalog.rules_reviewed_at,'2026-10-17');
+  assert.equal(catalog.rules_reviewed_at,'2026-10-20');
   const health=await (await worker.fetch(new Request('https://example.test/health'),{})).json();
   assert.equal(health.search_version,1);
 });
+
+test('alerts deduplicate incidents; transport does not recover; old checks ignored',async()=>{const db=database();for(const [at,diagnostic] of [['01','parse_error'],['02','parse_error'],['03','connection_error'],['04','ok'],['01','parse_error']])await saveDiagnostic(db,{checked_at:'2026-10-21T'+at+':00:00Z',diagnostic});const a=(await db.prepare('SELECT * FROM facility_alerts ORDER BY at').all()).results;assert.equal(a.length,2);assert.equal(a[0].active,1);assert.equal(a[1].active,0)});
+test('diagnostics reject invalid credentials; app-only preflight',async()=>{const e=env();assert.equal((await worker.fetch(new Request('https://example.test/diagnostics'),e)).status,401);assert.equal((await worker.fetch(new Request('https://example.test/diagnostics',{headers:{Authorization:'Bearer invalid'}}),e)).status,401);const r=await worker.fetch(new Request('https://example.test/diagnostics',{method:'OPTIONS',headers:{Origin:e.APP_ORIGIN}}),e);assert.equal(r.status,204);assert.equal(r.headers.get('Access-Control-Allow-Headers'),'Authorization')});

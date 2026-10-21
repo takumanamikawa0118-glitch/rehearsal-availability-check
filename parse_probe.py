@@ -66,7 +66,7 @@ def parse_pdf(n):
      day=int(row[0]);date=f'{y}-{m:02}-{day:02}';closed='休館' in ''.join(x or '' for x in row) or row[1] in ['月','木'] or (m==12 and day>=29)
      for ci in range(2,8):
       v=row[ci];b=table.rows[ri].cells[ci]
-      if closed:status,why='unavailable','closed_day_or_merged_closure'
+      if closed:status,why='closed','closed_day_or_merged_closure'
       elif b is None or v is None:status,why='unknown','merged_cell'
       elif v.strip()=='×':status,why='occupied','reserved_mark'
       elif v.strip():status,why='unavailable','facility_program'
@@ -105,10 +105,10 @@ def parse_image(i, year=2026, month=None):
    ri=(day-1)*3+slot;y0=int(round(top+ri*step));y1=int(round(top+(ri+1)*step))
    for room in range(4):
     x0=int(xs[3+room]);x1=int(xs[4+room]);crop=im[y0+4:y1-3,x0+5:x1-5];g=cv2.cvtColor(crop,cv2.COLOR_BGR2GRAY);ink=(g<110);frac=float(ink.mean());yellow=float(((crop[:,:,2]>180)&(crop[:,:,1]>180)&(crop[:,:,0]<120)).mean());rgb=crop.astype('int16');green=float(((rgb[:,:,1]>170)&(rgb[:,:,2]>150)&(rgb[:,:,0]>140)&(rgb[:,:,1]-rgb[:,:,2]>4)&(rgb[:,:,1]-rgb[:,:,0]>10)).mean())
-    if datetime.date(y,m,day).weekday() in [1,4]:status,why='unavailable','tuesday_friday_closure'
-    elif green>.4:status,why='unavailable','green_closure_shading'
+    if datetime.date(y,m,day).weekday() in [1,4]:status,why='closed','tuesday_friday_closure'
+    elif green>.4:status,why='closed','green_closure_shading'
     elif yellow>.4:status,why='unavailable','yellow_program_or_merged_area'
-    elif frac<.002:status,why='available_candidate','blank_image_cell_needs_validation'
+    elif frac<.002:status,why='available_in_source','validated_blank_image_cell'
     else:status,why='occupied_or_unknown','ink_present_not_assumed_blank'
     put('katabira',['研修室I','研修室II','研修室III','和室'][room],f'{y}-{m:02}-{day:02}',['午前','午後','夜間'][slot],status,why,i+1,ink_fraction=round(frac,4))
  METRICS.append({'facility':f'katabira-{m}','parse_seconds':round(time.perf_counter()-t,4),'cells':count*12,'warning':'Layout-specific prototype; available_candidate not approved availability. Year/month labels require confirmation on future files.'})

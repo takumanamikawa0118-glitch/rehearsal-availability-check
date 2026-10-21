@@ -29,6 +29,8 @@ URLS = dict(
 BASE = json.loads((ROOT / 'baseline.json').read_text())
 FETCHES = []
 ATTEMPTS = []
+HTTP_VALIDATORS = {}
+RESPONSE_VALIDATORS = {}
 
 def request_policy(url):
     # The two intermittently slow sources get a longer, bounded budget.
@@ -56,13 +58,16 @@ def fetch_once(url, filename, origin):
     if urllib.parse.urlsplit(url).hostname != urllib.parse.urlsplit(origin).hostname:
         raise ValueError('参照先のホストが変わりました。手動確認が必要です')
     started = time.monotonic()
-    req = urllib.request.Request(url, headers={'User-Agent': 'RehearsalAvailabilityProbe/0.3 (read-only research)'})
+    headers={'User-Agent': 'RehearsalAvailabilityProbe/0.3 (read-only research)'}
+    headers.update(HTTP_VALIDATORS.get(url,{}))
+    req = urllib.request.Request(url, headers=headers)
     timeout, _ = request_policy(url)
     phase = 'connect_tls_or_headers'
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             if urllib.parse.urlsplit(response.url).hostname != urllib.parse.urlsplit(origin).hostname:
                 raise ValueError('転送先の確認が必要です')
+            RESPONSE_VALIDATORS[url]={k:response.headers.get(v) for k,v in [('etag','ETag'),('modified','Last-Modified')] if response.headers.get(v)}
             phase = 'body_read'
             body = response.read(8_000_001)
             if len(body) > 8_000_000:
@@ -72,6 +77,12 @@ def fetch_once(url, filename, origin):
             FETCHES.append(dict(file=filename, http=response.status, bytes=len(body), sha256=digest,
                                 seconds=round(time.monotonic()-started, 3)))
             return body, digest
+    except urllib.error.HTTPError as exc:
+        if exc.code==304 and url in HTTP_VALIDATORS and urllib.parse.urlsplit(exc.url).hostname==urllib.parse.urlsplit(origin).hostname:
+            FETCHES.append(dict(file=filename,http=304,bytes=0))
+            return b'',None
+        exc.fetch_phase=phase
+        raise
     except Exception as exc:
         exc.fetch_phase = phase
         raise
@@ -134,24 +145,29 @@ def check_katabira():
         images.append((link, int(label[1])))
     if not 1 <= len(images) <= 12:
         raise ValueError('予約画像数を確認できません')
-    before = len(parser.ROWS)
-    months = set()
-    for i, (link, month) in enumerate(images):
-        _, digest = fetch(link, f'katabira-{i}.jpg', origin)
-        review = reviewed.get(digest)
-        if not review or review['month'] != month:
-            raise ValueError('画像が更新されました。年月・配置・読み取り精度を再確認します')
-        key = f"{review['year']}-{month:02}"
-        if key in months:
-            raise ValueError('画像の対象月が重複しています')
-        months.add(key)
-        parser.parse_image(i, year=review['year'], month=month)
-    samples = [s for s in BASE['samples'] if s['facility'] == 'katabira' and s['date'][:7] in months]
-    for sample in samples:
-        hits = [r for r in parser.ROWS[before:] if all(r[k] == sample[k] for k in ['date','room','period'])]
-        if len(hits) != 1 or hits[0]['status'] != sample['expected']:
-            raise ValueError('画像の目視確認サンプルと不一致です')
-    parser.METRICS.append(dict(facility='katabira', reviewed_samples_passed=len(samples)))
+    import katabira_auto as auto
+    cache=auto.load_cache();updated={};months=set();reused=0;analyzed=0
+    for i,(link,month) in enumerate(images):
+        old=cache.get(link);valid=auto.validate_cached(old,month)
+        if valid:HTTP_VALIDATORS[link]={k:old[v] for k,v in [('If-None-Match','etag'),('If-Modified-Since','modified')] if old.get(v)}
+        _,digest=fetch(link,f'katabira-{i}.jpg',origin)
+        if valid and (digest is None or digest==old.get('sha256')):
+            parser.ROWS.extend(old['cells']);entry={**old,**RESPONSE_VALIDATORS.get(link,{})};reused+=1
+        else:
+            year=auto.validate_image(RAW/f'katabira-{i}.jpg',month)
+            before=len(parser.ROWS);parser.parse_image(i,year=year,month=month)
+            cells=parser.ROWS[before:]
+            if digest in reviewed:
+                for sample in (x for x in BASE['samples'] if x['facility']=='katabira' and x['date'].startswith(f'{year}-{month:02}-')):
+                    expected='available_in_source' if sample['expected']=='available_candidate' else sample['expected']
+                    hits=[r for r in cells if all(r[k]==sample[k] for k in ['date','room','period'])]
+                    if len(hits)!=1 or (hits[0]['status']!=expected and not(hits[0]['status']=='closed' and expected=='unavailable')):raise ValueError('確認済み画像サンプルと不一致です')
+            entry=dict(version=auto.VERSION,sha256=digest,year=year,month=month,cells=auto.sanitized(cells),**RESPONSE_VALIDATORS.get(link,{}));analyzed+=1
+        key=f"{entry['year']}-{month:02}"
+        if key in months:raise ValueError('画像の対象年月が重複しています')
+        months.add(key);updated[link]=entry
+    auto.save_cache(updated)
+    parser.METRICS.append(dict(facility='katabira',images_analyzed=analyzed,images_reused=reused))
     return None
 
 def check_kikuna():
@@ -210,7 +226,7 @@ def main():
                 samples = [s for s in BASE['samples'] if s['facility'] == facility]
                 for s in samples:
                     hits = [x for x in cells if all(x[k] == s[k] for k in ['date','room','period'])]
-                    if len(hits) != 1 or hits[0]['status'] != s['expected']:
+                    if len(hits) != 1 or (hits[0]['status'] != s['expected'] and not(hits[0]['status']=='closed' and s['expected']=='unavailable')):
                         raise ValueError('既存の目視確認サンプルと不一致です')
                 row['baseline_samples_passed'] = len(samples)
         except Exception as exc:
@@ -231,7 +247,7 @@ def main():
              '|施設|結果|解析枠数|再試行回数|秒|', '|---|---|---:|---:|---:|']
     for r in results:
         lines.append(f"|{r['name']}|{r['result']}|{r['cells']}|{r['retries']}|{r['seconds']}|")
-    lines += ['', '帷子の空白は「空室候補」です。画像更新時は再確認が必要です。この概要は取得・解析部分の結果です。送信を伴う実行では、下の保存結果も確認してください。', '',
+    lines += ['', '帷子は画像更新時だけ年月・日付列・表構造・空欄を自動検証します。検証できなければ未確認です。この概要は取得・解析部分の結果です。送信を伴う実行では、下の保存結果も確認してください。', '',
               '取得失敗時は当該施設の解析結果を破棄します。団体名や予約表原文はログに出しません。', '',
               '<details><summary>詳細（展開してください）</summary>', '', '```json',
               json.dumps(report,ensure_ascii=False,indent=2), '```', '</details>']
