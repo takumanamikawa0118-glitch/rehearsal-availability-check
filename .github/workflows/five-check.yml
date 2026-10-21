@@ -21,9 +21,21 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - uses: actions/cache/restore@v5
+        with:
+          path: .availability-cache
+          key: katabira-v4-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: katabira-v4-
+      - name: Install free local OCR
+        run: sudo apt-get update -qq && sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn tesseract-ocr-eng
       - name: Install free open-source parsers (no cache)
         run: python -m pip install --no-cache-dir -r requirements.txt
       - name: Check and save five public facilities
         env:
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
         run: python availability-service/collect_and_send.py
+      - uses: actions/cache/save@v5
+        if: always() && !cancelled()
+        with:
+          path: .availability-cache
+          key: katabira-v4-${{ github.run_id }}-${{ github.run_attempt }}
