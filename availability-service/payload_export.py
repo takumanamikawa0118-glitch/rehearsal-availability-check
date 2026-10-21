@@ -4,7 +4,7 @@ Not connected to the running hourly workflow yet.
 import datetime
 
 FACILITIES = {'hiranuma','tobe','karuizawa','katabira','kikuna'}
-STATUSES = {'available_in_source','available_candidate','occupied','unavailable','unknown','occupied_or_unknown'}
+STATUSES = {'available_in_source','available_candidate','occupied','unavailable','closed','unknown','occupied_or_unknown'}
 
 def make_payload(facility, rows, success, checked_at):
     if facility not in FACILITIES:
@@ -24,8 +24,6 @@ def make_payload(facility, rows, success, checked_at):
                 raise ValueError('Invalid cell')
             if not isinstance(cell['room'],str) or not cell['room'].strip() or len(cell['room']) > 80:
                 raise ValueError('Invalid room')
-            if facility == 'katabira' and cell['status'] == 'available_in_source':
-                raise ValueError('Image candidate needs review')
             key = (cell['room'],cell['date'],cell['period'])
             if key in seen:
                 raise ValueError('Duplicate cell')

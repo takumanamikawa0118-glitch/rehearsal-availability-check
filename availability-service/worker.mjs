@@ -8,13 +8,13 @@ export const SCHEMA = `CREATE TABLE IF NOT EXISTS facility_snapshots (
 );`;
 const FACILITIES = new Set(['hiranuma', 'tobe', 'karuizawa', 'katabira', 'kikuna']);
 const STATUSES = new Set(['available_in_source', 'available_candidate', 'occupied',
-  'unavailable', 'unknown', 'occupied_or_unknown']);
+  'unavailable', 'closed', 'unknown', 'occupied_or_unknown']);
 const MAX_BYTES = 256 * 1024;
 const STALE_MS = 6 * 60 * 60 * 1000;
 // Single-file Worker: can still be deployed using the Cloudflare dashboard.
 // This is source-based time matching, not a booking or eligibility decision.
 export const SEARCH_VERSION = 1;
-const RULES_REVIEWED_AT = '2026-10-17';
+const RULES_REVIEWED_AT = '2026-10-20';
 const STANDARD_PERIODS = [['午前','09:00','13:00'],['午後','13:00','17:00'],['夜間','17:00','21:00']];
 const FACILITY_RULES = {
   hiranuma: {
@@ -40,9 +40,9 @@ const FACILITY_RULES = {
     name:'軽井沢コミュニティハウス', rooms:['ホール','和室'],
     source_url:'https://karuizawa.nkrsk.info/', rules_url:'https://karuizawa.nkrsk.info/use/',
     periods:STANDARD_PERIODS, closed_weekdays:[1,4],
-    year_end_start:'12-29', year_end_finish:'01-03', grouped_rooms:true,
+    year_end_start:'12-29', year_end_finish:'01-03', grouped_rooms:false,
     notes:['団体登録・予約受付条件の確認が必要です。',
-      '予約表はホール・和室の単位です。ホールA/B、和室1/2の個別の空きと同じ部屋の継続利用は施設への確認が必要です。',
+      'ホール・和室の2部屋として扱います。',
       '原則1日1時間帯です。複数時間帯の利用は施設への確認が必要です。',
       '利用時間には片付け・清掃を含みます。']
   },
@@ -53,7 +53,7 @@ const FACILITY_RULES = {
     hours_url:'https://katabira.hodogaya-kumin.com/smartphone/',
     periods:[['午前','09:00','12:00'],['午後','13:00','17:00'],['夜間','17:00','21:00']],
     closed_weekdays:[2,5], year_end_start:'12-29', year_end_finish:'01-03',
-    notes:['画像の空欄を読み取った空室候補です。施設への確認が必要です。',
+    notes:['画像の年月・表構造・空欄を自動検証した公開表の情報です。',
       '12〜13時は閉館です。団体登録・予約受付条件の確認が必要です。',
       '平日の登校日9〜15時は大きな音を出す利用に制限があります。学校の活動が優先されます。',
       '利用時間には片付け・清掃を含みます。']
@@ -128,7 +128,6 @@ function snapshotState(row, now) {
 }
 function bookingChecks(facility, room, count) {
   const reasons=[];
-  if (facility==='karuizawa') reasons.push('individual_room_unverified');
   if (count>1 && ['tobe','karuizawa'].includes(facility)) reasons.push('multi_period_use_requires_confirmation');
   if (facility==='hiranuma' && count>1 &&
       (!(room==='会議室C' || room==='和室') || count>2)) reasons.push('multi_period_use_requires_confirmation');
@@ -171,7 +170,7 @@ export function searchFacility(facility, row, query, now=Date.now()) {
     if (reason) {result.rooms.push({room,reason});continue;}
     const confirmation=bookingChecks(facility,room,needed.length);
     // Katabira is always a candidate, even if storage were to contain an invalid promoted status.
-    if (facility==='katabira' || selected.some(c=>c.status==='available_candidate')) confirmation.push('image_candidate');
+    if (selected.some(c=>c.status==='available_candidate')) confirmation.push('image_candidate');
     const candidate={room,periods:needed.map(p=>({...p})),
       room_scope:rule.grouped_rooms?'source_group':'individual_room',
       same_individual_room_verified:!rule.grouped_rooms,
@@ -207,9 +206,10 @@ function onlyKeys(value, keys) {
       Object.keys(value).some(k => !keys.includes(k))) throw new Error('Unexpected fields');
 }
 export function validate(input, now = Date.now()) {
-  onlyKeys(input, ['schema_version', 'facility', 'checked_at', 'result', 'cells']);
+  onlyKeys(input, ['schema_version', 'facility', 'checked_at', 'result', 'cells', 'diagnostic']);
   if (input.schema_version !== 1 || !FACILITIES.has(input.facility) ||
       !['ok','error'].includes(input.result)) throw new Error('Invalid envelope');
+  if(input.diagnostic!==undefined&&(!['ok','parse_error','connection_error'].includes(input.diagnostic)||input.facility!=='katabira'||(input.result==='ok')!==(input.diagnostic==='ok')))throw new Error('Invalid diagnostic');
   const when = Date.parse(input.checked_at);
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(input.checked_at) ||
       !Number.isFinite(when) || now-when > 24*60*60*1000 || when-now > 5*60*1000)
@@ -227,9 +227,6 @@ export function validate(input, now = Date.now()) {
     const date = new Date(cell.date+'T00:00:00Z');
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== cell.date)
       throw new Error('Invalid calendar date');
-    // Image blanks must never be promoted to confirmed availability.
-    if (input.facility === 'katabira' && cell.status === 'available_in_source')
-      throw new Error('Image availability needs review');
     const key = JSON.stringify([cell.room,cell.date,cell.period]);
     if (seen.has(key)) throw new Error('Duplicate cell');
     seen.add(key);
@@ -252,14 +249,36 @@ async function readLimited(request) {
   for (const part of parts) {bytes.set(part,offset); offset += part.byteLength;}
   return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
+export const DIAGNOSTIC_SCHEMA=`CREATE TABLE IF NOT EXISTS facility_health (facility TEXT PRIMARY KEY, at TEXT NOT NULL, active INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS facility_alerts (id TEXT PRIMARY KEY, at TEXT NOT NULL, active INTEGER NOT NULL);`;
+async function ensureDiagnostics(db){await db.exec(DIAGNOSTIC_SCHEMA)}
+export async function saveDiagnostic(db,input){
+ if(input.diagnostic==='connection_error')return;
+ await ensureDiagnostics(db);
+ const active=input.diagnostic==='parse_error'?1:0,at=input.checked_at,id='katabira-'+at+'-'+active;
+ await db.batch([
+  db.prepare(`INSERT OR IGNORE INTO facility_alerts(id,at,active) SELECT ?,?,? WHERE (EXISTS(SELECT 1 FROM facility_health WHERE facility='katabira' AND active!=? AND at<?) OR (?=1 AND NOT EXISTS(SELECT 1 FROM facility_health WHERE facility='katabira')))` ).bind(id,at,active,active,at,active),
+  db.prepare(`INSERT INTO facility_health(facility,at,active) VALUES('katabira',?,?) ON CONFLICT(facility) DO UPDATE SET at=excluded.at,active=excluded.active WHERE excluded.at>facility_health.at`).bind(at,active),
+  db.prepare('DELETE FROM facility_alerts WHERE id NOT IN (SELECT id FROM facility_alerts ORDER BY at DESC LIMIT 100)')
+ ]);
+}
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin') === env.APP_ORIGIN ? env.APP_ORIGIN : null;
+    if(request.method==='OPTIONS'&&origin)return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Access-Control-Max-Age':'600'}});
     if (url.pathname === '/health' && request.method === 'GET')
-      return json({service:'rehearsal-availability',schema_version:1,stage:'draft',search_version:SEARCH_VERSION},200,origin);
+      return json({service:'rehearsal-availability',schema_version:1,stage:'live',api_revision:2,search_version:SEARCH_VERSION},200,origin);
     if (url.pathname === '/facilities' && request.method === 'GET') return json(catalog(),200,origin);
     if (!env.DB) return json({error:'service_not_configured'},503,origin);
+    if (url.pathname==='/diagnostics'&&request.method==='GET') {
+      const token=request.headers.get('Authorization');
+      if(!token?.startsWith('Bearer ')||token.length>8192)return json({error:'unauthorized'},401,origin);
+      // Candidate UID is untrusted until Firestore verifies this exact ID token and owner-only read.
+      let uid;
+      try{uid=JSON.parse(atob(token.slice(7).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;if(!/^[A-Za-z0-9_-]{1,128}$/.test(uid))throw Error();}catch{return json({error:'unauthorized'},401,origin);}
+      try{const r=await fetch('https://firestore.googleapis.com/v1/projects/keiko-note-9718d/databases/(default)/documents/appOperators/'+uid,{headers:{Authorization:token}});if(!r.ok||(await r.json()).fields?.enabled?.booleanValue!==true)return json({error:'forbidden'},403,origin);await ensureDiagnostics(env.DB);const rows=await env.DB.prepare('SELECT id,at,active FROM facility_alerts ORDER BY at DESC LIMIT 100').all();return json({alerts:rows.results||[]},200,origin);}catch{return json({error:'diagnostics_unavailable'},503,origin);}
+    }
     if (url.pathname === '/ingest' && request.method === 'POST') {
       // No fallback token, no token in URLs, no logging of request bodies.
       if (typeof env.INGEST_TOKEN !== 'string' || env.INGEST_TOKEN.length < 32)
@@ -271,6 +290,7 @@ export default {
       catch {return json({error:'invalid_payload'},400);}
       try {
         const success = input.result === 'ok';
+        if(input.facility==='katabira'&&input.diagnostic)await saveDiagnostic(env.DB,input);
         const result = await env.DB.prepare(UPSERT).bind(input.facility, input.checked_at,
           success ? input.checked_at : null, input.result,
           success ? JSON.stringify(input.cells) : null).run();

@@ -63,6 +63,12 @@ def main():
     if set(results) != FACILITIES:
         print('施設一覧が不一致のため送信を中止しました。')
         return 1
+    service_v2=False
+    try:
+        with urllib.request.urlopen(ENDPOINT.removesuffix('/ingest')+'/health',timeout=15) as response:
+            service_v2=json.load(response).get('api_revision',0)>=2
+    except Exception:
+        pass
     summaries = ['', '## 空き情報サービスへの保存結果', '', '|施設|取得|保存|', '|---|---|---|']
     failed = False
     for facility, row in results.items():
@@ -73,6 +79,12 @@ def main():
         except (ValueError, KeyError, TypeError):
             good = False
             payload = make_payload(facility, [], False, report['checked_at_utc'])
+        if not service_v2:
+            for cell in payload['cells']:
+                if cell['status']=='closed':cell['status']='unavailable'
+                elif facility=='katabira' and cell['status']=='available_in_source':cell['status']='available_candidate'
+        if facility=='katabira' and service_v2:
+            payload['diagnostic']='ok' if good else ('parse_error' if row.get('error','').startswith(('ValueError:', 'AssertionError:', 'RuntimeError:')) else 'connection_error')
         saved = False
         for attempt in range(2):
             try:
