@@ -6,10 +6,13 @@ import unittest
 import urllib.error
 from unittest.mock import patch
 import check_five as c
+import katabira_auto as auto
 
 class SourceTests(unittest.TestCase):
     def setUp(self):
         c.ATTEMPTS.clear()
+        for name,value in [('load_cache',{}),('save_cache',None),('validate_image',2026)]:
+            mock=patch.object(auto,name,return_value=value);mock.start();self.addCleanup(mock.stop)
 
     def test_three_images_and_reordered_months(self):
         payloads = {f'https://katabira.hodogaya-kumin.com/dataimge/{m}.jpg': str(m).encode() for m in [12,10,11]}
@@ -23,16 +26,18 @@ class SourceTests(unittest.TestCase):
             self.assertEqual([x.kwargs['month'] for x in parse.call_args_list],[12,10,11])
             self.assertTrue(all(x.kwargs['year']==2026 for x in parse.call_args_list))
 
-    def test_unreviewed_image_refused(self):
+    def test_changed_image_invalid_layout_refused(self):
         html='<img src="/dataimge/12.jpg" alt="12月予約状況">'.encode('cp932')
         with patch.object(c,'BASE',{'katabira_images':[],'samples':[]}), patch.object(c,'fetch',side_effect=[(html,''),(b'new','newhash')]), patch.object(c.parser,'parse_image') as parse:
-            with self.assertRaisesRegex(ValueError,'画像が更新'):c.check_katabira()
+            with patch.object(auto,'validate_image',side_effect=ValueError('表構造が変更')):
+                with self.assertRaisesRegex(ValueError,'表構造'):c.check_katabira()
             parse.assert_not_called()
 
     def test_month_label_mismatch_refused(self):
         html='<img src="/dataimge/12.jpg" alt="11月予約状況">'.encode('cp932')
         with patch.object(c,'BASE',{'katabira_images':[{'sha256':'known','year':2026,'month':12}],'samples':[]}), patch.object(c,'fetch',side_effect=[(html,''),(b'image','known')]):
-            with self.assertRaises(ValueError):c.check_katabira()
+            with patch.object(auto,'validate_image',side_effect=ValueError('年月が不一致')):
+                with self.assertRaises(ValueError):c.check_katabira()
 
     def test_kikuna_timeout_recovers_on_third_attempt(self):
         timeout=urllib.error.URLError(socket.timeout('timed out'))
