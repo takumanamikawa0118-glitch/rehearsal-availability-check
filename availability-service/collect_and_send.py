@@ -94,3 +94,25 @@ def main():
                 break
             except urllib.error.HTTPError as exc:
                 retry = exc.code in (500, 502, 503, 504)
+            except (urllib.error.URLError, TimeoutError, ConnectionError):
+                retry = True
+            except Exception:
+                retry = False
+            if not retry or attempt == 1:
+                status = '送信失敗（詳細・トークンは非表示）'
+                break
+            time.sleep(5)
+        failed |= not saved
+        if saved and not good:
+            print(f"::warning::{row['name']}の空き状況を確認できませんでした。未確認として保存しました。")
+        summaries.append(f"|{row['name']}|{'解析完了' if good else '未確認'}|{status}|")
+        print(f"{row['name']}: {'解析完了' if good else '未確認'} / {status}")
+    summaries.append('\n取得失敗の施設は未確認として保存します。直近の成功データを現在の空室として返しません。\n')
+    summary = '\n'.join(summaries)
+    if os.environ.get('GITHUB_STEP_SUMMARY'):
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as stream:
+            stream.write(summary)
+    return int(failed)
+
+if __name__ == '__main__':
+    raise SystemExit(main())
